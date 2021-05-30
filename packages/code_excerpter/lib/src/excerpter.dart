@@ -1,5 +1,4 @@
 import 'directive.dart';
-import 'nullable.dart';
 import 'util/line.dart';
 import 'util/logging.dart';
 
@@ -8,12 +7,13 @@ const fullFileKey = '\u0000';
 const defaultRegionKey = '';
 const defaultPlaster = '···';
 
-Map<String, List<String>> newExcerptsMap() => {};
-
 class Excerpter {
   final String uri;
   final String content;
   final List<String> _lines; // content as list of lines
+
+  final Map<String, List<String>> excerpts = {};
+  final Set<String> _openExcerpts = {};
 
   // Index of next line to process.
   int _lineIdx;
@@ -28,9 +28,6 @@ class Excerpter {
       : _lines = content.split(eol),
         _lineIdx = 0;
 
-  final Map<String, List<String>> excerpts = newExcerptsMap();
-  final Set<String> _openExcerpts = {};
-
   Excerpter weave() {
     final lines = content.split(eol);
 
@@ -43,11 +40,12 @@ class Excerpter {
 
     // Drop trailing blank lines for all excerpts.
     // Normalize indentation for all but the full file.
-    for (final name in excerpts.keys) {
-      dropTrailingBlankLines(excerpts[name]);
-      _dropTrailingPlaster(excerpts[name]);
-      if (name == fullFileKey) continue;
-      excerpts[name] = maxUnindent(excerpts[name]).toList();
+    for (final entry in excerpts.entries) {
+      dropTrailingBlankLines(entry.value);
+      _dropTrailingPlaster(entry.value);
+      if (entry.key != fullFileKey) {
+        excerpts[entry.key] = maxUnindent(entry.value).toList();
+      }
     }
 
     // Final adjustment to excerpts relative to fullFileKey:
@@ -59,8 +57,7 @@ class Excerpter {
       excerpts.remove(fullFileKey);
     } else {
       // Report fullFileKey excerpt for defaultRegionKey
-      excerpts[defaultRegionKey] = excerpts[fullFileKey];
-      excerpts.remove(fullFileKey);
+      excerpts[defaultRegionKey] = excerpts.remove(fullFileKey) ?? [];
     }
     return this;
   }
@@ -70,7 +67,10 @@ class Excerpter {
 
     if (directive == null) {
       // Add line to open regions
-      _openExcerpts.forEach((name) => excerpts[name].add(_line));
+      for (final excerptName in _openExcerpts) {
+        excerpts[excerptName]?.add(_line);
+      }
+
       return;
     }
 
@@ -91,16 +91,21 @@ class Excerpter {
   }
 
   void _startRegion(Directive directive) {
-    @nullable
-    List<String> regionAlreadyStarted;
+    List<String>? regionAlreadyStarted;
 
     final regionNames = directive.args;
     log.finer('_startRegion(regionNames = $regionNames)');
 
-    if (regionNames.isEmpty) regionNames.add(defaultRegionKey);
+    if (regionNames.isEmpty) {
+      regionNames.add(defaultRegionKey);
+    }
+
     for (final name in regionNames) {
       final isNew = _excerptStart(name);
-      if (!isNew) (regionAlreadyStarted ??= []).add(_quoteName(name));
+      if (!isNew) {
+        regionAlreadyStarted ??= [];
+        regionAlreadyStarted.add(_quoteName(name));
+      }
     }
 
     _warnRegions(
@@ -110,8 +115,7 @@ class Excerpter {
   }
 
   void _endRegion(Directive directive) {
-    @nullable
-    List<String> regionsWithoutStart;
+    List<String>? regionsWithoutStart;
     final regionNames = directive.args;
     log.finer('_endRegion(regionNames = $regionNames)');
 
@@ -122,15 +126,20 @@ class Excerpter {
 
     for (final name in regionNames) {
       if (_openExcerpts.remove(name)) {
-        if (excerpts[name].isEmpty) {
-          _warnRegions(
-            [name],
-            (regions) => 'empty $regions',
-          );
+        final excerpt = excerpts[name];
+        if (excerpt != null) {
+          if (excerpt.isEmpty) {
+            _warnRegions(
+              [name],
+              (regions) => 'empty $regions',
+            );
+          }
+
+          excerpt.add(directive.indentation + defaultPlaster);
         }
-        excerpts[name].add(directive.indentation + defaultPlaster);
       } else {
-        (regionsWithoutStart ??= []).add(_quoteName(name));
+        regionsWithoutStart ??= [];
+        regionsWithoutStart.add(_quoteName(name));
       }
     }
 
@@ -141,7 +150,7 @@ class Excerpter {
   }
 
   void _warnRegions(
-    List<String> _regions,
+    List<String>? _regions,
     String Function(String) msg,
   ) {
     if (_regions == null) return;

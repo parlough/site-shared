@@ -20,11 +20,9 @@ class Differ {
   final ErrorReporter _reportError;
   final Logger _log;
 
-  @nullable
-  Directory _tmpDir;
+  Directory? _tmpDir;
 
-  @nullable
-  Iterable<String> getDiff(String relativeSrcPath1, String region,
+  Iterable<String>? getDiff(String relativeSrcPath1, String region,
       Map<String, String> args, String pathPrefix) {
     final relativeSrcPath2 = args['diff-with'];
     final useCompleteFiles = region.isEmpty && args['remove'] == null;

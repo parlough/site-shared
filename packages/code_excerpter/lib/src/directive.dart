@@ -1,5 +1,3 @@
-import 'nullable.dart';
-
 /// Directives usually appear inside a line comment.
 ///
 /// Ignore any close-comment syntax:
@@ -19,37 +17,35 @@ class Directive {
   final Match _match;
   final Kind kind;
 
-  List<String> _args;
+  late final List<String> args;
 
   /// Issues raised while parsing this directive.
   final List<String> issues = [];
 
   Directive._(this.kind, this._match) {
-    _args = _uniqueArgs();
+    args = _uniqueArgs();
   }
 
-  String get line => _match[0];
+  String? get line => _match[0];
 
   /// Whitespace before the directive
-  String get indentation => _match[1];
+  String get indentation => _match[1] ?? '';
 
   /// Characters at the start of the line before the directive lexeme
-  String get prefix => _match[1] + (_match[2] ?? '');
+  String get prefix => (_match[1] ?? '') + (_match[2] ?? '');
 
   /// The directive's lexeme
-  String get lexeme => _match[_lexemeIndex];
+  String? get lexeme => _match[_lexemeIndex];
 
   /// Raw string corresponding to the directive's arguments
-  String get rawArgs => _match[4];
+  String get rawArgs => _match[4] ?? '';
 
-  List<String> get args => _args;
-
-  @nullable
-  factory Directive.tryParse(String line) {
+  static Directive? tryParse(String line) {
     final match = _directiveRegEx.firstMatch(line);
     if (match == null) return null;
 
     final lexeme = match[_lexemeIndex];
+
     final kind = tryParseKind(lexeme);
     return kind == null ? null : Directive._(kind, match);
   }
@@ -64,14 +60,23 @@ class Directive {
       } else if (arg == "''") {
         arg = '';
       }
-      argCount[arg] ??= 0;
-      if (++argCount[arg] == 2) issues.add('repeated argument "$arg"');
+
+      var count = argCount[arg] ?? 0;
+
+      count += 1;
+
+      if (count == 2) {
+        issues.add('repeated argument "$arg"');
+      }
+
+      argCount[arg] = count;
     }
+
     return argCount.keys.toList();
   }
 
   List<String> _parseArgs() =>
-      rawArgs.isEmpty ? [] : rawArgs.split(_argSeparator);
+      rawArgs.isEmpty ? const [] : rawArgs.split(_argSeparator);
 }
 
 enum Kind {
@@ -80,8 +85,7 @@ enum Kind {
   plaster, // TO be deprecated
 }
 
-@nullable
-Kind tryParseKind(String lexeme) {
+Kind? tryParseKind(String? lexeme) {
   switch (lexeme) {
     case 'docregion':
       return Kind.startRegion;

@@ -1,5 +1,3 @@
-import '../nullable.dart';
-
 import 'core.dart';
 import 'replace.dart';
 
@@ -17,8 +15,7 @@ class PlasterCodeTransformer {
   /// If [plasterTemplate] is 'none' then plasters are removed.
   /// If [plasterTemplate] is null then a default [lang] specific plaster
   /// template is used.
-  @nullable
-  CodeTransformer codeTransformer(String plasterTemplate, String lang) {
+  CodeTransformer? codeTransformer(String? plasterTemplate, String lang) {
     if (plasterTemplate == 'none') return removeCodeTransformer(defaultPlaster);
     if (!excerptsYaml) return null;
 
@@ -30,8 +27,7 @@ class PlasterCodeTransformer {
         : _replace.codeTransformerHelper(defaultPlaster, template);
   }
 
-  @nullable
-  String _plasterTemplateFor(String lang) {
+  String? _plasterTemplateFor(String? lang) {
     if (lang == null) return null;
 
     switch (lang) {

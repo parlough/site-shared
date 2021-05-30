@@ -32,7 +32,7 @@ class Hunk {
   String _timeStamp = '';
   List<String> _lines;
 
-  Hunk(String textFormat) {
+  Hunk([String? textFormat]) {
     _rawText = textFormat ?? '';
     if (_rawText.isNotEmpty) _parse();
   }
@@ -128,7 +128,7 @@ class Hunk {
 
   bool isValidFileIndex(int i) => i == 0 || i == 1;
 
-  int _int(String s) {
+  int? _int(String? s) {
     if (s == null) return null;
     try {
       // Can't use tryParse() since this code needs to run under 1.x as well.

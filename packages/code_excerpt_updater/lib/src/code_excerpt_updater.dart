@@ -38,7 +38,7 @@ class Updater {
   final int defaultIndentation;
   final bool escapeNgInterpolation;
   final String globalReplaceExpr;
-  final String globalPlasterTemplate;
+  final String? globalPlasterTemplate;
   String filePlasterTemplate;
 
   ArgProcessor _argProcessor;
@@ -66,8 +66,8 @@ class Updater {
     this.escapeNgInterpolation = true,
     this.globalReplaceExpr = '',
     this.globalPlasterTemplate,
-    Stdout err,
-    Level logLevel,
+    Stdout? err,
+    Level? logLevel,
   }) {
     initLogger(logLevel);
     _reporter =
@@ -282,7 +282,7 @@ class Updater {
     return transformers.fold(null, compose);
   }
 
-  CodeTransformer _argToTransformer(String arg, String value) {
+  CodeTransformer? _argToTransformer(String arg, String value) {
     switch (arg) {
       case 'from':
         return fromCodeTransformer(value);
@@ -303,7 +303,7 @@ class Updater {
     }
   }
 
-  int _getIndentBy(String indentByAsString) {
+  int _getIndentBy(String? indentByAsString) {
     if (indentByAsString == null) return defaultIndentation;
     var errorMsg = '';
     var result = 0;

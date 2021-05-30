@@ -5,14 +5,14 @@ import 'package:build/build.dart';
 import 'src/excerpter.dart';
 import 'src/util/line.dart';
 
-const excerptLineLeftBorderChar = '|';
+const _excerptLineLeftBorderChar = '|';
+const _outputExtension = '.excerpt.yaml';
 
-Builder builder(BuilderOptions options) => CodeExcerptBuilder(options);
+Builder builder(BuilderOptions? options) =>
+    CodeExcerptBuilder(options ?? BuilderOptions.empty);
 
 class CodeExcerptBuilder implements Builder {
-  final outputExtension = '.excerpt.yaml';
-
-  BuilderOptions options;
+  final BuilderOptions options;
 
   CodeExcerptBuilder(this.options);
 
@@ -22,7 +22,7 @@ class CodeExcerptBuilder implements Builder {
     if (assetId.package.startsWith(r'$') || assetId.path.endsWith(r'$')) return;
 
     final content = await buildStep.readAsString(assetId);
-    final outputAssetId = assetId.addExtension(outputExtension);
+    final outputAssetId = assetId.addExtension(_outputExtension);
 
     final excerpter = Excerpter(assetId.path, content);
     final yaml = _toYaml(excerpter.weave().excerpts);
@@ -35,8 +35,8 @@ class CodeExcerptBuilder implements Builder {
   }
 
   @override
-  Map<String, List<String>> get buildExtensions => {
-        '': [outputExtension]
+  Map<String, List<String>> get buildExtensions => const {
+        '': [_outputExtension]
       };
 
   String _toYaml(Map<String, List<String>> excerpts) {
@@ -45,7 +45,7 @@ class CodeExcerptBuilder implements Builder {
     const yamlExcerptLeftBorderCharKey = '#border';
     final s = StringBuffer();
 
-    s.writeln("'$yamlExcerptLeftBorderCharKey': '$excerptLineLeftBorderChar'");
+    s.writeln("'$yamlExcerptLeftBorderCharKey': '$_excerptLineLeftBorderChar'");
     excerpts.forEach((name, lines) {
       s.writeln(_yamlEntry(name, lines));
     });
@@ -55,7 +55,7 @@ class CodeExcerptBuilder implements Builder {
   String _yamlEntry(String regionName, List<String> lines) {
     final codeAsYamlStringValue = lines
         // YAML multiline string: indent by 2 spaces.
-        .map((line) => '  $excerptLineLeftBorderChar$line')
+        .map((line) => '  $_excerptLineLeftBorderChar$line')
         .join(eol);
     return "'$regionName': |+\n$codeAsYamlStringValue";
   }

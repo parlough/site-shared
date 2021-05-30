@@ -9,8 +9,7 @@ typedef Matcher = bool Function(String t);
 
 Matcher not(Matcher p) => (String s) => !p(s);
 
-@nullable
-Matcher patternArgToMatcher(String arg, [String cmd = '']) {
+Matcher? patternArgToMatcher(String? arg, [String cmd = '']) {
   if (arg == null) return null;
   Matcher matcher;
   if (arg.startsWith('/') && arg.endsWith('/')) {

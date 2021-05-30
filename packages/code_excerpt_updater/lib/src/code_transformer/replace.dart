@@ -1,20 +1,18 @@
 import '../constants.dart';
 import '../issue_reporter.dart';
 import '../logger.dart';
-import '../nullable.dart';
 import '../util.dart';
 import 'core.dart';
 
 class ReplaceCodeTransformer {
-  ReplaceCodeTransformer(this._reporter);
-
   final IssueReporter _reporter;
 
   final _matchDollarNumRE = RegExp(r'(\$+)(&|\d*)');
   final _endRE = RegExp(r'^g;?\s*$');
 
-  @nullable
-  CodeTransformer codeTransformer(String replaceExp) {
+  ReplaceCodeTransformer(this._reporter);
+
+  CodeTransformer? codeTransformer(String? replaceExp) {
     void _reportErr([String extraInfo = '']) {
       _reporter.error(
         '${'invalid replace attribute ("$replaceExp"); '}'
@@ -60,8 +58,7 @@ class ReplaceCodeTransformer {
     return transformers.fold(null, compose);
   }
 
-  @nullable
-  CodeTransformer codeTransformerHelper(String re, String _replacement) {
+  CodeTransformer? codeTransformerHelper(String re, String _replacement) {
     final replacement = encodeSlashChar(_replacement);
     log.finest(' >> replacement expr: $replacement');
 

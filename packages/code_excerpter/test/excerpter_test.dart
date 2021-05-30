@@ -6,7 +6,7 @@ import 'package:test/test.dart';
 // Mock URI used for all content origins.
 const uri = 'foo';
 
-List<String> contentGeneratingNoExcerpts = [
+const List<String> contentGeneratingNoExcerpts = [
   '',
   'abc',
   'abc\ndef\n',
